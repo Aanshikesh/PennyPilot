@@ -1,11 +1,12 @@
 "use server";
 
-import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 export async function getCurrentBudget(accountId) {
   try {
+    const { db } = await import("@/lib/prisma");
+
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
@@ -13,17 +14,12 @@ export async function getCurrentBudget(accountId) {
       where: { clerkUserId: userId },
     });
 
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
 
     const budget = await db.budget.findFirst({
-      where: {
-        userId: user.id,
-      },
+      where: { userId: user.id },
     });
 
-    // Get current month's expenses
     const currentDate = new Date();
     const startOfMonth = new Date(
       currentDate.getFullYear(),
@@ -40,11 +36,11 @@ export async function getCurrentBudget(accountId) {
       where: {
         userId: user.id,
         type: "EXPENSE",
+        accountId,
         date: {
           gte: startOfMonth,
           lte: endOfMonth,
         },
-        accountId,
       },
       _sum: {
         amount: true,
@@ -52,7 +48,9 @@ export async function getCurrentBudget(accountId) {
     });
 
     return {
-      budget: budget ? { ...budget, amount: budget.amount.toNumber() } : null,
+      budget: budget
+        ? { ...budget, amount: budget.amount.toNumber() }
+        : null,
       currentExpenses: expenses._sum.amount
         ? expenses._sum.amount.toNumber()
         : 0,
@@ -65,6 +63,8 @@ export async function getCurrentBudget(accountId) {
 
 export async function updateBudget(amount) {
   try {
+    const { db } = await import("@/lib/prisma");
+
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
@@ -74,7 +74,6 @@ export async function updateBudget(amount) {
 
     if (!user) throw new Error("User not found");
 
-    // Update or create budget
     const budget = await db.budget.upsert({
       where: {
         userId: user.id,
@@ -89,6 +88,7 @@ export async function updateBudget(amount) {
     });
 
     revalidatePath("/dashboard");
+
     return {
       success: true,
       data: { ...budget, amount: budget.amount.toNumber() },

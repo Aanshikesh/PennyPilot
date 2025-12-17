@@ -7,6 +7,9 @@ import {
   processRecurringTransaction,
   triggerRecurringTransactions,
 } from "@/lib/inngest/function";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const { GET, POST, PUT } = serve({
   client: inngest,

@@ -1,6 +1,5 @@
-"use server";
-
 import { db } from "@/lib/prisma";
+
 import { subDays } from "date-fns";
 
 const ACCOUNT_ID = "account-id";
@@ -58,21 +57,20 @@ export async function seedTransactions() {
         const type = Math.random() < 0.4 ? "INCOME" : "EXPENSE";
         const { category, amount } = getRandomCategory(type);
 
-        const transaction = {
-          id: crypto.randomUUID(),
-          type,
-          amount,
-          description: `${
-            type === "INCOME" ? "Received" : "Paid for"
-          } ${category}`,
-          date,
-          category,
-          status: "COMPLETED",
-          userId: USER_ID,
-          accountId: ACCOUNT_ID,
-          createdAt: date,
-          updatedAt: date,
-        };
+       const transaction = {
+              type,
+              amount,
+              description: `${
+                type === "INCOME" ? "Received" : "Paid for"
+              } ${category}`,
+              date,
+              category,
+              status: "COMPLETED",
+              userId: USER_ID,
+              accountId: ACCOUNT_ID,
+              createdAt: date,
+              updatedAt: date,
+            };
 
         totalBalance += type === "INCOME" ? amount : -amount;
         transactions.push(transaction);
