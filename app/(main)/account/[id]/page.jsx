@@ -18,7 +18,7 @@ export default async function AccountPage({ params }) {
     <div className="space-y-8 px-5">
       <div className="flex gap-4 items-end justify-between">
         <div>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight bg-gradient-to-br from-blue-600 to-purple-600 text-transparent bg-clip-text capitalize">
+          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight gradient-title capitalize">
             {account.name}
           </h1>
           <p className="text-muted-foreground">

@@ -8,8 +8,6 @@ import {
   Trash,
   Search,
   X,
-  ChevronLeft,
-  ChevronRight,
   RefreshCw,
   Clock,
 } from "lucide-react";
@@ -55,8 +53,6 @@ import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
 import { useRouter } from "next/navigation";
 
-const ITEMS_PER_PAGE = 10;
-
 const RECURRING_INTERVALS = {
   DAILY: "Daily",
   WEEKLY: "Weekly",
@@ -64,7 +60,7 @@ const RECURRING_INTERVALS = {
   YEARLY: "Yearly",
 };
 
-export function TransactionTable({ transactions }) {
+export function NoPaginationTransactionTable({ transactions }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [sortConfig, setSortConfig] = useState({
     field: "date",
@@ -73,7 +69,6 @@ export function TransactionTable({ transactions }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [recurringFilter, setRecurringFilter] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
 
   // Memoized filtered and sorted transactions
@@ -125,18 +120,6 @@ export function TransactionTable({ transactions }) {
     return result;
   }, [transactions, searchTerm, typeFilter, recurringFilter, sortConfig]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(
-    filteredAndSortedTransactions.length / ITEMS_PER_PAGE
-  );
-  const paginatedTransactions = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedTransactions.slice(
-      startIndex,
-      startIndex + ITEMS_PER_PAGE
-    );
-  }, [filteredAndSortedTransactions, currentPage]);
-
   const handleSort = (field) => {
     setSortConfig((current) => ({
       field,
@@ -155,9 +138,9 @@ export function TransactionTable({ transactions }) {
 
   const handleSelectAll = () => {
     setSelectedIds((current) =>
-      current.length === paginatedTransactions.length
+      current.length === filteredAndSortedTransactions.length
         ? []
-        : paginatedTransactions.map((t) => t.id)
+        : filteredAndSortedTransactions.map((t) => t.id)
     );
   };
 
@@ -188,12 +171,7 @@ export function TransactionTable({ transactions }) {
     setSearchTerm("");
     setTypeFilter("");
     setRecurringFilter("");
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-    setSelectedIds([]); // Clear selections on page change
+    setSelectedIds([]);
   };
 
   return (
@@ -208,22 +186,13 @@ export function TransactionTable({ transactions }) {
           <Input
             placeholder="Search transactions..."
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
           />
         </div>
         <div className="flex gap-2">
-          <Select
-            value={typeFilter}
-            onValueChange={(value) => {
-              setTypeFilter(value);
-              setCurrentPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[130px]">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger>
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -236,7 +205,6 @@ export function TransactionTable({ transactions }) {
             value={recurringFilter}
             onValueChange={(value) => {
               setRecurringFilter(value);
-              setCurrentPage(1);
             }}
           >
             <SelectTrigger className="w-[130px]">
@@ -283,8 +251,9 @@ export function TransactionTable({ transactions }) {
               <TableHead className="w-[50px]">
                 <Checkbox
                   checked={
-                    selectedIds.length === paginatedTransactions.length &&
-                    paginatedTransactions.length > 0
+                    selectedIds.length ===
+                      filteredAndSortedTransactions.length &&
+                    filteredAndSortedTransactions.length > 0
                   }
                   onCheckedChange={handleSelectAll}
                 />
@@ -337,7 +306,7 @@ export function TransactionTable({ transactions }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedTransactions.length === 0 ? (
+            {filteredAndSortedTransactions.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={7}
@@ -347,7 +316,7 @@ export function TransactionTable({ transactions }) {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedTransactions.map((transaction) => (
+              filteredAndSortedTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>
                     <Checkbox
@@ -450,31 +419,6 @@ export function TransactionTable({ transactions }) {
           </TableBody>
         </Table>
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
